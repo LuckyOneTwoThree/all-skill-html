@@ -1,5 +1,5 @@
 var DetailPanel = (function () {
-  var panel, titleEl, contentEl;
+  var modal, panel, titleEl, contentEl, backdrop;
   var isOpen = false;
 
   var domainColors = {
@@ -25,7 +25,9 @@ var DetailPanel = (function () {
   };
 
   function init() {
+    modal = document.getElementById('detail-modal');
     panel = document.getElementById('detail-panel');
+    backdrop = document.getElementById('detail-backdrop');
     titleEl = document.getElementById('detail-title');
     contentEl = document.getElementById('detail-content');
 
@@ -33,10 +35,20 @@ var DetailPanel = (function () {
     if (closeBtn) {
       closeBtn.addEventListener('click', close);
     }
+
+    if (backdrop) {
+      backdrop.addEventListener('click', close);
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && isOpen) {
+        close();
+      }
+    });
   }
 
-  function open(node) {
-    if (!panel || !titleEl || !contentEl) return;
+  function open(node, clickX, clickY) {
+    if (!modal || !panel || !titleEl || !contentEl) return;
 
     titleEl.textContent = node.name;
     var color = domainColors[node.domain] || '#94a3b8';
@@ -45,7 +57,7 @@ var DetailPanel = (function () {
 
     var html = '';
 
-    html += '<div class="space-y-4">';
+    html += '<div class="flex flex-col gap-4">';
 
     html += '<div class="flex items-center gap-2 flex-wrap">';
     html += '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white" style="background:' + color + '">';
@@ -55,7 +67,7 @@ var DetailPanel = (function () {
     html += '</div>';
 
     if (node.description) {
-      html += '<div class="p-3 rounded-xl bg-slate-50 border border-slate-100">';
+      html += '<div class="p-3 rounded-xl bg-slate-50/80 border border-slate-100">';
       html += '<p class="text-sm text-slate-600 leading-relaxed">' + node.description + '</p>';
       html += '</div>';
     }
@@ -65,6 +77,31 @@ var DetailPanel = (function () {
       html += '<h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">简介</h4>';
       html += '<p class="text-sm text-slate-700">' + node.brief + '</p>';
       html += '</div>';
+    }
+
+    if (node.type === 'domain') {
+      var domain = findDomainById(node.id);
+      if (domain) {
+        var stats = getDomainStats(domain);
+        html += '<div class="grid grid-cols-4 gap-2">';
+        html += '<div class="p-2 rounded-xl bg-slate-50/80 text-center">';
+        html += '<div class="font-sora font-bold text-base" style="color:' + color + '">' + stats.modules + '</div>';
+        html += '<div class="text-xs text-slate-500">模块</div>';
+        html += '</div>';
+        html += '<div class="p-2 rounded-xl bg-slate-50/80 text-center">';
+        html += '<div class="font-sora font-bold text-base" style="color:' + color + '">' + stats.orchestrators + '</div>';
+        html += '<div class="text-xs text-slate-500">编排器</div>';
+        html += '</div>';
+        html += '<div class="p-2 rounded-xl bg-slate-50/80 text-center">';
+        html += '<div class="font-sora font-bold text-base" style="color:' + color + '">' + stats.skills + '</div>';
+        html += '<div class="text-xs text-slate-500">Skill</div>';
+        html += '</div>';
+        html += '<div class="p-2 rounded-xl bg-slate-50/80 text-center">';
+        html += '<div class="font-sora font-bold text-base" style="color:' + color + '">' + stats.total + '</div>';
+        html += '<div class="text-xs text-slate-500">总计</div>';
+        html += '</div>';
+        html += '</div>';
+      }
     }
 
     if (node.input && node.input.length > 0) {
@@ -96,58 +133,75 @@ var DetailPanel = (function () {
     if (node.children && node.children.length > 0) {
       html += '<div>';
       html += '<h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">调度 Skill (' + node.children.length + ')</h4>';
-      html += '<div class="space-y-1.5">';
+      html += '<div class="flex flex-wrap gap-1.5">';
       node.children.forEach(function (childId) {
         var childSkill = findSkillById(childId);
         var childColor = childSkill ? domainColors[childSkill.domain] || '#94a3b8' : '#94a3b8';
         var childName = childSkill ? childSkill.name : childId;
-        html += '<div class="flex items-center gap-2 p-2 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors duration-200 cursor-pointer" data-skill-id="' + childId + '">';
-        html += '<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:' + childColor + '"></span>';
-        html += '<span class="text-sm text-slate-700 truncate">' + childName + '</span>';
-        html += '</div>';
+        html += '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer hover:opacity-80" style="background:' + childColor + '10;color:' + childColor + ';border:1px solid ' + childColor + '25" data-skill-id="' + childId + '">';
+        html += '<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:' + childColor + '"></span>';
+        html += childName + '</span>';
       });
       html += '</div>';
       html += '</div>';
     }
 
-    if (node.type === 'domain') {
-      var domain = findDomainById(node.id);
-      if (domain) {
-        var stats = getDomainStats(domain);
-        html += '<div class="grid grid-cols-2 gap-3">';
-        html += '<div class="p-3 rounded-xl bg-slate-50 text-center">';
-        html += '<div class="font-sora font-bold text-lg" style="color:' + color + '">' + stats.modules + '</div>';
-        html += '<div class="text-xs text-slate-500">模块</div>';
-        html += '</div>';
-        html += '<div class="p-3 rounded-xl bg-slate-50 text-center">';
-        html += '<div class="font-sora font-bold text-lg" style="color:' + color + '">' + stats.orchestrators + '</div>';
-        html += '<div class="text-xs text-slate-500">编排器</div>';
-        html += '</div>';
-        html += '<div class="p-3 rounded-xl bg-slate-50 text-center">';
-        html += '<div class="font-sora font-bold text-lg" style="color:' + color + '">' + stats.skills + '</div>';
-        html += '<div class="text-xs text-slate-500">Skill</div>';
-        html += '</div>';
-        html += '<div class="p-3 rounded-xl bg-slate-50 text-center">';
-        html += '<div class="font-sora font-bold text-lg" style="color:' + color + '">' + stats.total + '</div>';
-        html += '<div class="text-xs text-slate-500">总计</div>';
-        html += '</div>';
-        html += '</div>';
-      }
-    }
-
     html += '</div>';
 
     contentEl.innerHTML = html;
+    panel.scrollTop = 0;
 
-    panel.classList.remove('detail-panel-closed');
-    panel.classList.add('detail-panel-open');
+    panel.style.setProperty('--card-accent', color);
+
+    positionPanel(clickX, clickY);
+
+    modal.classList.add('detail-modal-open');
+    modal.setAttribute('aria-hidden', 'false');
+
     isOpen = true;
   }
 
-  function close() {
+  function positionPanel(clickX, clickY) {
     if (!panel) return;
-    panel.classList.remove('detail-panel-open');
-    panel.classList.add('detail-panel-closed');
+
+    var svg = document.getElementById('graph-svg');
+    var svgRect = svg ? svg.getBoundingClientRect() : { left: 0, top: 0 };
+
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var cardW = 420;
+    var cardH = Math.min(panel.scrollHeight || 400, vh * 0.7);
+    var gap = 20;
+
+    var mouseX = svgRect.left + clickX;
+    var mouseY = svgRect.top + clickY;
+
+    var left = mouseX + gap;
+    var top = mouseY - cardH / 2;
+
+    if (left + cardW > vw - 16) {
+      left = mouseX - cardW - gap;
+    }
+    if (left < 16) {
+      left = 16;
+    }
+    if (top < 16) {
+      top = 16;
+    }
+    if (top + cardH > vh - 16) {
+      top = vh - cardH - 16;
+    }
+
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+  }
+
+  function close() {
+    if (!modal) return;
+
+    modal.classList.remove('detail-modal-open');
+    modal.setAttribute('aria-hidden', 'true');
+
     isOpen = false;
   }
 

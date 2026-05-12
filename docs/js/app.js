@@ -233,6 +233,8 @@
   }
 
   function initSmoothScroll() {
+    var navOffset = 80;
+
     document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
       anchor.addEventListener('click', function (e) {
         var targetId = this.getAttribute('href');
@@ -240,7 +242,8 @@
         var target = document.querySelector(targetId);
         if (target) {
           e.preventDefault();
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          var targetTop = target.getBoundingClientRect().top + window.pageYOffset - navOffset;
+          window.scrollTo({ top: targetTop, behavior: 'smooth' });
         }
       });
     });
@@ -304,8 +307,8 @@
     DetailPanel.init();
 
     GraphView.init('graph-svg', {
-      onNodeClick: function (node) {
-        DetailPanel.open(node);
+      onNodeClick: function (node, clickX, clickY) {
+        DetailPanel.open(node, clickX, clickY);
       }
     });
 

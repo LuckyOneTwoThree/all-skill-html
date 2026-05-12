@@ -114,29 +114,87 @@ body {
   background: white;
 }
 
-.detail-panel-closed {
-  max-height: 0;
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.detail-modal.detail-modal-open {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.detail-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(248, 250, 252, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   opacity: 0;
-  overflow: hidden;
-  border: none;
-  margin: 0;
-  padding: 0;
+  transition: opacity 0.3s ease;
 }
 
-@media (min-width: 1024px) {
-  .detail-panel-closed {
-    max-height: none;
-    opacity: 1;
-    overflow: visible;
-    border: 1px solid rgba(226, 232, 240, 0.6);
-  }
-}
-
-.detail-panel-open {
-  max-height: 700px;
+.detail-modal-open .detail-modal-backdrop {
   opacity: 1;
-  overflow: auto;
-  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.detail-modal-card {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.04),
+    0 12px 24px -4px rgba(0, 0, 0, 0.06),
+    0 20px 48px -8px rgba(99, 102, 241, 0.08);
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  overflow-y: auto;
+  transform: scale(0.85) translateY(-8px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease, top 0.3s ease, left 0.3s ease;
+  pointer-events: auto;
+}
+
+.detail-modal-open .detail-modal-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.detail-modal-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--card-accent, #6366F1), transparent);
+  border-radius: 1px;
+  opacity: 0.6;
+}
+
+.detail-modal-card::-webkit-scrollbar {
+  width: 4px;
+}
+
+.detail-modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.detail-modal-card::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+.detail-modal-card::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
 }
 
 .active-tab {

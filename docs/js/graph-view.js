@@ -334,7 +334,10 @@ var GraphView = (function () {
         .on('end', dragEnded))
       .on('click', function (event, d) {
         event.stopPropagation();
-        if (onNodeClick) onNodeClick(d);
+        var rect = document.getElementById('graph-svg').getBoundingClientRect();
+        var clickX = event.clientX - rect.left;
+        var clickY = event.clientY - rect.top;
+        if (onNodeClick) onNodeClick(d, clickX, clickY);
       })
       .on('mouseenter', function (event, d) {
         var r = getNodeRadius(d);

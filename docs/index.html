@@ -159,8 +159,8 @@
         <p class="text-slate-500 max-w-xl mx-auto">力导向图呈现 179 个 Skill 间的编排关系与数据契约流</p>
       </div>
 
-      <div class="flex flex-col lg:flex-row gap-4">
-        <div class="flex-1">
+      <div class="flex flex-col gap-4">
+        <div>
           <div id="graph-toolbar" class="flex flex-wrap items-center gap-3 mb-4">
             <div class="relative flex-1 min-w-[200px] max-w-xs">
               <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
@@ -218,23 +218,6 @@
               <button id="zoom-reset" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors duration-200 cursor-pointer" aria-label="重置">
                 <i data-lucide="maximize-2" class="w-4 h-4 text-slate-500"></i>
               </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="detail-panel" class="detail-panel-closed lg:w-[380px] bg-white rounded-2xl border border-slate-200/60 shadow-lg overflow-hidden transition-all duration-300">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 id="detail-title" class="font-sora font-bold text-lg text-slate-900 truncate">选择一个节点</h3>
-              <button id="detail-close" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label="关闭">
-                <i data-lucide="x" class="w-4 h-4 text-slate-400"></i>
-              </button>
-            </div>
-            <div id="detail-content">
-              <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                <i data-lucide="mouse-pointer-click" class="w-10 h-10 mb-3 opacity-50"></i>
-                <p class="text-sm">点击图谱中的节点查看详情</p>
-              </div>
             </div>
           </div>
         </div>
@@ -336,5 +319,20 @@
   <script src="js/sankey-view.js"></script>
   <script src="js/detail-panel.js"></script>
   <script src="js/app.js"></script>
+
+  <div id="detail-modal" class="detail-modal" aria-hidden="true">
+    <div id="detail-backdrop" class="detail-modal-backdrop"></div>
+    <div id="detail-panel" class="detail-modal-card">
+      <div class="p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 id="detail-title" class="font-sora font-bold text-lg text-slate-900 truncate"></h3>
+          <button id="detail-close" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200 cursor-pointer group" aria-label="关闭">
+            <i data-lucide="x" class="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors duration-200"></i>
+          </button>
+        </div>
+        <div id="detail-content"></div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
