@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All-Skill Galaxy - 产品工程 Skill 全景可视化</title>
+  <meta name="description" content="179 个 AI Agent Skill，覆盖产品全生命周期。产品 × 设计 × 工程的全景架构可视化。">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4F46E5',
+            secondary: '#7C3AED',
+            accent: '#06B6D4',
+            cta: '#F97316',
+            bg: '#FAFBFC',
+            pm: '#6366F1',
+            ui: '#8B5CF6',
+            backend: '#0EA5E9',
+            cross: '#F59E0B'
+          },
+          fontFamily: {
+            sora: ['Sora', 'Noto Sans SC', 'sans-serif'],
+            dm: ['DM Sans', 'Noto Sans SC', 'sans-serif'],
+            body: ['DM Sans', 'Noto Sans SC', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-bg text-slate-900 font-body antialiased">
+
+  <nav id="navbar" class="fixed top-4 left-4 right-4 z-50 bg-white/80 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg shadow-black/[0.03] transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14">
+        <a href="#" class="flex items-center gap-2 cursor-pointer group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="font-sora font-bold text-lg bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">All-Skill Galaxy</span>
+        </a>
+        <div class="hidden md:flex items-center gap-1">
+          <a href="#graph" class="nav-link px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="network" class="w-4 h-4"></i>
+            <span>全景图谱</span>
+          </a>
+          <a href="#sankey" class="nav-link px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-secondary hover:bg-secondary/5 transition-all duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="git-branch" class="w-4 h-4"></i>
+            <span>数据契约</span>
+          </a>
+          <a href="#modules" class="nav-link px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span>模块总览</span>
+          </a>
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="nav-link px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="github" class="w-4 h-4"></i>
+            <span>GitHub</span>
+          </a>
+        </div>
+        <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label="菜单">
+          <i data-lucide="menu" class="w-5 h-5 text-slate-600"></i>
+        </button>
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden border-t border-slate-100">
+      <div class="px-4 py-3 space-y-1">
+        <a href="#graph" class="mobile-nav-link block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer">全景图谱</a>
+        <a href="#sankey" class="mobile-nav-link block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-secondary hover:bg-secondary/5 transition-all duration-200 cursor-pointer">数据契约</a>
+        <a href="#modules" class="mobile-nav-link block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-accent hover:bg-accent/5 transition-all duration-200 cursor-pointer">模块总览</a>
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 cursor-pointer">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-cyan-50"></div>
+    <div class="absolute inset-0 gradient-flow"></div>
+
+    <div class="absolute top-20 left-[10%] w-72 h-72 bg-primary/20 rounded-full blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute top-40 right-[15%] w-96 h-96 bg-secondary/15 rounded-full blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-20 left-[20%] w-80 h-80 bg-accent/20 rounded-full blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    <div class="absolute bottom-40 right-[10%] w-64 h-64 bg-cross/15 rounded-full blur-3xl opacity-30 animate-blob animation-delay-6000"></div>
+    <div class="absolute top-[60%] left-[50%] w-56 h-56 bg-pm/10 rounded-full blur-3xl opacity-20 animate-blob animation-delay-3000"></div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-24 pb-16">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/60 backdrop-blur-lg border border-white/40 text-sm font-medium text-slate-600 mb-8 shadow-sm">
+        <i data-lucide="zap" class="w-4 h-4 text-cta"></i>
+        <span>AI Agent Skill Architecture</span>
+      </div>
+
+      <h1 class="font-sora font-bold text-5xl sm:text-6xl md:text-7xl leading-tight mb-6">
+        <span class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">产品</span>
+        <span class="text-slate-300 mx-2">×</span>
+        <span class="bg-gradient-to-r from-secondary via-accent to-primary bg-clip-text text-transparent">设计</span>
+        <span class="text-slate-300 mx-2">×</span>
+        <span class="bg-gradient-to-r from-accent via-primary to-secondary bg-clip-text text-transparent">工程</span>
+      </h1>
+
+      <p class="text-xl sm:text-2xl text-slate-500 font-medium mb-12 max-w-2xl mx-auto">
+        179 个 AI Agent Skill，覆盖产品全生命周期
+      </p>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-16">
+        <div class="stat-card bg-white/60 backdrop-blur-lg border border-white/40 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+          <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 mb-3 mx-auto">
+            <i data-lucide="cpu" class="w-5 h-5 text-primary"></i>
+          </div>
+          <div class="font-sora font-bold text-3xl text-primary count-up" data-target="179">0</div>
+          <div class="text-sm text-slate-500 mt-1">Skills</div>
+        </div>
+        <div class="stat-card bg-white/60 backdrop-blur-lg border border-white/40 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+          <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-secondary/10 mb-3 mx-auto">
+            <i data-lucide="layers" class="w-5 h-5 text-secondary"></i>
+          </div>
+          <div class="font-sora font-bold text-3xl text-secondary count-up" data-target="4">0</div>
+          <div class="text-sm text-slate-500 mt-1">领域</div>
+        </div>
+        <div class="stat-card bg-white/60 backdrop-blur-lg border border-white/40 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+          <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 mb-3 mx-auto">
+            <i data-lucide="workflow" class="w-5 h-5 text-accent"></i>
+          </div>
+          <div class="font-sora font-bold text-3xl text-accent count-up" data-target="39">0</div>
+          <div class="text-sm text-slate-500 mt-1">编排器</div>
+        </div>
+        <div class="stat-card bg-white/60 backdrop-blur-lg border border-white/40 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-default">
+          <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-cross/10 mb-3 mx-auto">
+            <i data-lucide="file-code-2" class="w-5 h-5 text-cross"></i>
+          </div>
+          <div class="font-sora font-bold text-3xl text-cross count-up" data-target="12">0</div>
+          <div class="text-sm text-slate-500 mt-1">数据契约</div>
+        </div>
+      </div>
+
+      <a href="#graph" class="inline-flex flex-col items-center gap-2 text-slate-400 hover:text-primary transition-colors duration-300 cursor-pointer group">
+        <span class="text-sm font-medium">探索全景</span>
+        <i data-lucide="chevrons-down" class="w-5 h-5 animate-bounce"></i>
+      </a>
+    </div>
+  </section>
+
+  <section id="graph" class="relative min-h-screen bg-white">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="text-center mb-8">
+        <h2 class="font-sora font-bold text-3xl sm:text-4xl text-slate-900 mb-3">全景图谱</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">力导向图呈现 179 个 Skill 间的编排关系与数据契约流</p>
+      </div>
+
+      <div class="flex flex-col lg:flex-row gap-4">
+        <div class="flex-1">
+          <div id="graph-toolbar" class="flex flex-wrap items-center gap-3 mb-4">
+            <div class="relative flex-1 min-w-[200px] max-w-xs">
+              <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+              <input id="graph-search" type="text" placeholder="搜索 Skill..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white/80 backdrop-blur text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200 font-body">
+            </div>
+            <div class="flex items-center bg-slate-100 rounded-xl p-1">
+              <button data-view="domain" class="view-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 transition-all duration-200 cursor-pointer">领域</button>
+              <button data-view="module" class="view-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 transition-all duration-200 cursor-pointer">模块</button>
+              <button data-view="full" class="view-btn active-view px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer">完整</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button data-domain="pm" class="domain-toggle active-domain flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer border-pm/30 bg-pm/10 text-pm">
+                <span class="w-2 h-2 rounded-full bg-pm"></span>产品
+              </button>
+              <button data-domain="ui" class="domain-toggle active-domain flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer border-ui/30 bg-ui/10 text-ui">
+                <span class="w-2 h-2 rounded-full bg-ui"></span>UI
+              </button>
+              <button data-domain="backend" class="domain-toggle active-domain flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer border-backend/30 bg-backend/10 text-backend">
+                <span class="w-2 h-2 rounded-full bg-backend"></span>后端
+              </button>
+              <button data-domain="cross" class="domain-toggle active-domain flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 cursor-pointer border-cross/30 bg-cross/10 text-cross">
+                <span class="w-2 h-2 rounded-full bg-cross"></span>跨域
+              </button>
+            </div>
+          </div>
+
+          <div id="graph-container" class="relative w-full bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200/60 overflow-hidden" style="height: 600px;">
+            <svg id="graph-svg" class="w-full h-full"></svg>
+            <div id="graph-loading" class="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+              <div class="flex items-center gap-3 text-slate-500">
+                <svg class="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" class="opacity-25"></circle>
+                  <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+                <span class="text-sm font-medium">加载图谱...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between mt-4">
+            <div class="flex items-center gap-4 text-xs text-slate-400">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-pm"></span>产品方法论</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-ui"></span>UI设计与前端</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-backend"></span>后端架构</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cross"></span>跨领域</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full border-2 border-slate-300"></span>编排器</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="zoom-in" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors duration-200 cursor-pointer" aria-label="放大">
+                <i data-lucide="zoom-in" class="w-4 h-4 text-slate-500"></i>
+              </button>
+              <button id="zoom-out" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors duration-200 cursor-pointer" aria-label="缩小">
+                <i data-lucide="zoom-out" class="w-4 h-4 text-slate-500"></i>
+              </button>
+              <button id="zoom-reset" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors duration-200 cursor-pointer" aria-label="重置">
+                <i data-lucide="maximize-2" class="w-4 h-4 text-slate-500"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="detail-panel" class="detail-panel-closed lg:w-[380px] bg-white rounded-2xl border border-slate-200/60 shadow-lg overflow-hidden transition-all duration-300">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 id="detail-title" class="font-sora font-bold text-lg text-slate-900 truncate">选择一个节点</h3>
+              <button id="detail-close" class="p-1.5 rounded-lg hover:bg-slate-100 transition-colors duration-200 cursor-pointer" aria-label="关闭">
+                <i data-lucide="x" class="w-4 h-4 text-slate-400"></i>
+              </button>
+            </div>
+            <div id="detail-content">
+              <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <i data-lucide="mouse-pointer-click" class="w-10 h-10 mb-3 opacity-50"></i>
+                <p class="text-sm">点击图谱中的节点查看详情</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sankey" class="relative py-20 bg-gradient-to-b from-white to-slate-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-xs font-medium mb-4">
+          <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
+          Data Contracts
+        </div>
+        <h2 class="font-sora font-bold text-3xl sm:text-4xl text-slate-900 mb-3">跨领域数据契约流</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">12 条数据契约连接四大领域，驱动从需求到交付的端到端协作</p>
+      </div>
+      <div id="sankey-container" class="w-full bg-white rounded-2xl border border-slate-200/60 p-4 sm:p-6 shadow-sm" style="height: 500px;">
+        <svg id="sankey-svg" class="w-full h-full"></svg>
+      </div>
+      <div class="flex items-center justify-center gap-6 mt-6 text-xs text-slate-400">
+        <span class="flex items-center gap-1.5"><span class="w-8 h-2 rounded-full bg-gradient-to-r from-pm to-ui"></span>PM → UI</span>
+        <span class="flex items-center gap-1.5"><span class="w-8 h-2 rounded-full bg-gradient-to-r from-pm to-backend"></span>PM → Backend</span>
+        <span class="flex items-center gap-1.5"><span class="w-8 h-2 rounded-full bg-gradient-to-r from-backend to-ui"></span>Backend → UI</span>
+        <span class="flex items-center gap-1.5"><span class="w-8 h-2 rounded-full bg-gradient-to-r from-ui to-ui"></span>UI → UI</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="modules" class="relative py-20 bg-slate-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-4">
+          <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+          Modules
+        </div>
+        <h2 class="font-sora font-bold text-3xl sm:text-4xl text-slate-900 mb-3">四大领域，全流程覆盖</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">从产品探索到后端架构，每个领域都有完整的模块化 Skill 体系</p>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 mb-10">
+        <button data-tab="pm" class="domain-tab active-tab flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer bg-pm text-white shadow-md shadow-pm/20">
+          <i data-lucide="target" class="w-4 h-4"></i>
+          产品方法论
+        </button>
+        <button data-tab="ui" class="domain-tab flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer bg-white text-slate-600 border border-slate-200 hover:border-ui/30 hover:text-ui">
+          <i data-lucide="palette" class="w-4 h-4"></i>
+          UI设计与前端
+        </button>
+        <button data-tab="backend" class="domain-tab flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer bg-white text-slate-600 border border-slate-200 hover:border-backend/30 hover:text-backend">
+          <i data-lucide="server" class="w-4 h-4"></i>
+          后端架构
+        </button>
+        <button data-tab="cross" class="domain-tab flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer bg-white text-slate-600 border border-slate-200 hover:border-cross/30 hover:text-cross">
+          <i data-lucide="link" class="w-4 h-4"></i>
+          跨领域协调
+        </button>
+      </div>
+
+      <div id="modules-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-white border-t border-slate-200/60 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-secondary to-accent flex items-center justify-center">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-white"></i>
+          </div>
+          <span class="font-sora font-bold text-sm bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">All-Skill Galaxy</span>
+        </div>
+        <div class="flex items-center gap-6 text-sm text-slate-500">
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="hover:text-slate-900 transition-colors duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="github" class="w-4 h-4"></i>
+            GitHub
+          </a>
+          <span class="text-slate-300">|</span>
+          <span class="flex items-center gap-1.5">
+            <i data-lucide="scale" class="w-4 h-4"></i>
+            MIT License
+          </span>
+          <span class="text-slate-300">|</span>
+          <a href="#" class="hover:text-slate-900 transition-colors duration-200 cursor-pointer flex items-center gap-1.5">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            贡献指南
+          </a>
+        </div>
+      </div>
+      <div class="mt-6 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+        Built with D3.js, Tailwind CSS & Lucide Icons
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/skills-data.js"></script>
+  <script src="js/graph-view.js"></script>
+  <script src="js/sankey-view.js"></script>
+  <script src="js/detail-panel.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
