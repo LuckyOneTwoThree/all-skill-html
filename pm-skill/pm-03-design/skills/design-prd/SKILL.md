@@ -1,17 +1,22 @@
 ---
 name: design-prd
-description: 当需要生成标准化PRD文档时使用。PRD自动生成与管理，基于需求和创意方案生成标准化PRD文档，为后续IA、流程和原型设计提供输入。涵盖PRD-L/S/X三级分层、9节完整结构、4道质量门禁。关键词：PRD生成、产品需求文档、需求文档自动生成、PRD管理。
+description: 当需要生成标准化PRD文档时使用。PRD自动生成与管理，基于需求和创意方案生成标准化PRD文档，为后续IA、流程和原型设计提供输入。涵盖PRD-L/S/X三级分层、9节完整结构、4道质量门禁。关键词：PRD生成、产品需求文档、需求文档自动生成、PRD管理、写需求文档、产品文档。
 metadata:
   module: "产品构思与设计"
   sub-module: "产品设计与原型"
   type: "pipeline"
-  version: "3.0"
+  version: "3.3"
+  domain_tags: ["互联网", "软件", "通用"]
+  trigger_examples:
+    - "帮我写PRD文档"
+    - "生成产品需求文档"
+    - "需求文档怎么写"
   interaction_mode: "ai_suggest_human_approve"
 ---
 
-# Pipeline 8: PRD生成器
+# PRD生成器
 
-本Skill负责将上游阶段的产出（需求管理、创意发散）自动转化为符合质量标准的PRD文档，为后续产品设计（IA、流程、原型）提供结构化输入。支持PRD-L/S/X三级分层，自动进行4道质量门禁检查，确保文档完整性、一致性、歧义消除和可追溯性。
+本Skill负责将上游阶段的产出（用户洞察、机会定义、创意发散）自动转化为符合质量标准的PRD文档，为后续产品设计（IA、流程、原型）提供结构化输入。需求收集、理解和优先级排序已内建于 design-prd 的 Step 1-3 中，无需单独的需求管理阶段。支持PRD-L/S/X三级分层，自动进行4道质量门禁检查，确保文档完整性、一致性、歧义消除和可追溯性。
 
 ## 核心原则
 1. 质量门禁不可绕过——4道门禁是PRD质量的底线，任何情况下不得跳过
@@ -239,18 +244,18 @@ metadata:
 检测缺失 → 判断等级 → 应用策略 → 输出结果
 
 L0处理：
-1. 标记为[AI补充，待确认]
+1. 标注"AI补充，待确认"
 2. 提供置信度评分
 3. 生成确认问题清单
 
 L1处理：
-1. 标记为[待补充]
+1. 标注"待补充"
 2. 使用默认值或模板填充
 3. 阻塞相关下游生成
 4. 生成补充清单
 
 L2处理：
-1. 标记为[缺少核心输入]
+1. 标注"缺少核心输入"
 2. 输出中断报告
 3. 指定缺失字段
 4. 要求重新输入
@@ -284,6 +289,8 @@ L2处理：
 
 | 阶段 | 输出物 | 消费方式 |
 |------|--------|----------|
+| **洞察分析（insight-analysis）** | 用户洞察、痛点、行为模式 | 替代原 requirements-collection 输入，提取用户研究数据和需求收集 |
+| **机会定义（opportunity-definition）** | 机会列表、优先级排序、问题陈述 | 替代原 requirements-understanding/prioritization 输入，提供需求理解和优先级排序 |
 | **探索（Discovery）** | 用户洞察、问题陈述、需求池 | 提取Problem Statement、目标用户定义 |
 | **战略（Strategy）** | OKR、路线图、价值主张 | 对齐业务目标、优先级判断 |
 | **构思（Ideation）** | 解决方案、功能列表 | 引用方案设计、验收标准来源 |
@@ -292,29 +299,28 @@ L2处理：
 
 ### 6.2 下游驱动
 
-| 下游方 | 驱动内容 | 交付物 |
-|--------|----------|--------|
-| **UI前端** | 交互逻辑、状态设计、页面规格、数据模型 | 组件意图描述 + 页面数据需求 |
-| **后端架构** | 功能规格、接口定义、数据实体、边界条件 | API契约输入 + 数据模型输入 |
-| **开发** | 功能规格、接口定义、边界条件 | 技术设计文档 |
-| **设计** | 交互逻辑、状态设计、页面规格 | 设计规范文档 |
-| **测试** | 验收标准、测试用例、环境要求 | 测试计划 |
-| **运营** | 发布策略、运营准备、效果评估 | 运营方案 |
-| **监控** | 可观测性要求、埋点方案 | 监控仪表盘 |
+| 下游方 | 驱动内容 | 交付物 | 消费来源 |
+|--------|----------|--------|----------|
+| **UI前端** | 交互逻辑、状态设计、页面规格、数据模型 | 组件意图描述 + 页面数据需求 | prd.json.pages[] + prd.json.user_flows[] |
+| **后端架构** | 功能规格、接口定义、数据实体、边界条件 | API契约输入 + 数据模型输入 | prd.json.features[] + prd.json.entities[] |
+| **开发** | 功能规格、接口定义、边界条件 | 技术设计文档 | prd.md + prd.json |
+| **设计** | 交互逻辑、状态设计、页面规格 | 设计规范文档 | prd.md + prd.json.pages[] |
+| **测试** | 验收标准、测试用例、环境要求 | 测试计划 | prd.json.features[].acceptance_criteria[] |
+| **运营** | 发布策略、运营准备、效果评估 | 运营方案 | prd.md |
+| **监控** | 可观测性要求、埋点方案 | 监控仪表盘 | prd.json.non_functional_requirements |
 
 ### 6.3 数据流向图
 
 ```
-[需求管理输出] → [创意发散输出]
-        ↓              ↓
-        └──────────────┘
-              ↓
-      PRD生成器（Pipeline 8）
-              ↓
-    ┌─────────┼─────────┐
-    ↓         ↓         ↓
+[洞察分析产出] → [机会定义产出] → [创意发散产出]
+        ↓              ↓                ↓
+        └──────────────┴────────────────┘
+                      ↓
+          PRD生成器（需求收集、理解、优先级排序已内建于 Step 1-3）
+                      ↓
+        ┌─────────┼─────────┐
+        ↓         ↓         ↓
 [IA设计]  [流程设计]  [原型设计]
- Pipeline9 Pipeline10 Pipeline11
 ```
 
 ## 交互模式
@@ -326,6 +332,8 @@ L2处理：
 | 输入项 | 类型 | 必填 | 来源 | 说明 |
 |--------|------|------|------|------|
 | metadata | JSON/object | 是 | 系统生成 | 请求元信息 |
+| insight_analysis | JSON/object | ○ | output/pm-discovery/insight-analysis / 上游探索阶段 | 用户洞察分析产出，替代原 requirements-collection 输入，提供用户研究数据和需求收集 |
+| opportunity_definition | JSON/object | ○ | output/pm-discovery/opportunity-definition / 上游探索阶段 | 机会定义产出，替代原 requirements-understanding/prioritization 输入，提供需求理解和优先级排序 |
 | exploration_outputs | JSON/object | ○ | 上游探索阶段 | 用户洞察、问题陈述 |
 | strategy_outputs | JSON/object | ○ | 上游战略阶段 | OKR、路线图 |
 | ideation_outputs | JSON/object | ○ | 上游构思阶段 | 解决方案、功能列表 |
@@ -340,10 +348,226 @@ L2处理：
 | 输出项 | 格式 | 路径 |
 |--------|------|------|
 | PRD文档 | Markdown | `output/pm-design/design-prd/prd.md` |
+| PRD结构化数据 | JSON | `output/pm-design/design-prd/prd.json` |
 | 质量门禁检查报告 | JSON | `output/pm-design/design-prd/{PRD-ID}_quality_report_{timestamp}.json` |
 | 需人类确认清单 | Markdown | `output/pm-design/design-prd/{PRD-ID}_human_review_required.md` |
 
 **完整输出数据结构与模板**：详见 [Reference/output-schema.md](Reference/output-schema.md)
+
+### prd.json 结构定义
+
+prd.json 是 PRD 的机器可消费版本，供 Backend/UI 下游 Skill 编程式消费，确保功能点、页面、实体、用户流程等核心信息可被自动解析和对齐。
+
+```json
+{
+  "prd_id": "string",
+  "version": "string",
+  "level": "L | S | X",
+  "status": "draft | in_review | approved | released",
+  "meta": {
+    "title": "string",
+    "owner": "string",
+    "created_at": "ISO8601",
+    "updated_at": "ISO8601"
+  },
+  "goals": [
+    {
+      "goal_id": "string",
+      "description": "string",
+      "okr_alignment": "string",
+      "success_metrics": [
+        {
+          "metric_name": "string",
+          "target_value": "string",
+          "current_value": "string | null",
+          "unit": "string"
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "feature_id": "string",
+      "name": "string",
+      "description": "string",
+      "priority": "must | should | could | wont",
+      "status": "planned | in_progress | completed | cancelled",
+      "goal_id": "string",
+      "acceptance_criteria": [
+        {
+          "criterion_id": "string",
+          "given": "string",
+          "when": "string",
+          "then": "string"
+        }
+      ],
+      "dependencies": ["feature_id"],
+      "related_pages": ["page_id"],
+      "related_entities": ["entity_id"]
+    }
+  ],
+  "pages": [
+    {
+      "page_id": "string",
+      "name": "string",
+      "route": "string",
+      "description": "string",
+      "data_requirements": [
+        {
+          "data_name": "string",
+          "source": "api | local | cache",
+          "api_endpoint": "string | null",
+          "fields": ["string"]
+        }
+      ],
+      "functional_areas": ["string"],
+      "user_flows": ["flow_id"],
+      "states": [
+        {
+          "state_name": "string",
+          "description": "string",
+          "triggers": ["string"]
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "entity_id": "string",
+      "name": "string",
+      "description": "string",
+      "fields": [
+        {
+          "field_name": "string",
+          "type": "string",
+          "required": "boolean",
+          "description": "string",
+          "constraints": "string | null"
+        }
+      ],
+      "relationships": [
+        {
+          "target_entity_id": "string",
+          "type": "one_to_one | one_to_many | many_to_many",
+          "description": "string"
+        }
+      ],
+      "api_endpoints": [
+        {
+          "method": "GET | POST | PUT | PATCH | DELETE",
+          "path": "string",
+          "description": "string"
+        }
+      ]
+    }
+  ],
+  "user_flows": [
+    {
+      "flow_id": "string",
+      "name": "string",
+      "description": "string",
+      "entry_page": "page_id",
+      "steps": [
+        {
+          "step_id": "string",
+          "action": "string",
+          "page_id": "string",
+          "expected_outcome": "string",
+          "error_handling": "string | null"
+        }
+      ],
+      "alternative_paths": [
+        {
+          "condition": "string",
+          "steps": ["step_id"]
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": {
+    "performance": [
+      {
+        "requirement": "string",
+        "metric": "string",
+        "target": "string"
+      }
+    ],
+    "availability": [
+      {
+        "requirement": "string",
+        "metric": "string",
+        "target": "string",
+        "measurement": "string"
+      }
+    ],
+    "security": [
+      {
+        "category": "authentication | authorization | encryption | audit | compliance",
+        "requirement": "string",
+        "implementation": "string"
+      }
+    ],
+    "observability": [
+      {
+        "dimension": "metrics | logs | traces",
+        "indicator": "string",
+        "alert_threshold": "string"
+      }
+    ]
+  },
+  "tracking_plan": {
+    "events": [
+      {
+        "event_id": "string",
+        "event_name": "string",
+        "trigger": "string",
+        "properties": [
+          {
+            "property_name": "string",
+            "type": "string",
+            "required": "boolean"
+          }
+        ],
+        "related_metric": "string"
+      }
+    ],
+    "validation": {
+      "coverage_target": "number",
+      "data_delay_threshold": "string"
+    }
+  },
+  "traceability": [
+    {
+      "feature_id": "string",
+      "goal_id": "string",
+      "upstream_source": "string",
+      "upstream_artifact_id": "string"
+    }
+  ]
+}
+```
+
+### prd.json 与 prd.md 的关系
+
+| 维度 | prd.md | prd.json |
+|------|--------|----------|
+| 消费者 | 人类（PM、设计师、开发） | 机器（Backend Skill、UI Skill） |
+| 内容 | 完整9节叙述+表格+图表 | 结构化核心数据（功能/页面/实体/流程） |
+| 生成顺序 | 先生成 prd.md | 从 prd.md 提取结构化数据生成 prd.json |
+| 一致性 | prd.json 必须与 prd.md 内容一致，冲突时以 prd.md 为准 | |
+
+### 输出校验规则
+
+- [ ] 9节结构完整：PRD-S完整9节结构全部存在
+- [ ] 追溯链贯通：从OKR到验收标准的追溯链完整
+- [ ] 门禁通过：4道质量门禁全部通过
+- [ ] 无歧义残留：无模糊量词和悬空引用
+- [ ] prd.json 完整性：features/pages/entities/user_flows 四个数组均非空
+- [ ] prd.json 引用一致性：feature.related_pages 中的 page_id 在 pages[] 中存在，feature.related_entities 中的 entity_id 在 entities[] 中存在
+- [ ] prd.json 追溯链完整：每个 feature 都有对应的 traceability 条目
+- [ ] prd.json 与 prd.md 一致：prd.json 中的功能点名称、优先级、验收标准与 prd.md 一致
+- [ ] prd.json tracking_plan 完整性：tracking_plan.events 非空，每个 event 的 properties 非空
+- [ ] prd.json NFR完整性：non_functional_requirements 的4个维度数组均非空
 
 ## 决策规则（详细）
 
@@ -428,35 +652,22 @@ L2处理：
 | 判定明确 | Then结果可客观判定 | 判定条件可测试性检查 |
 | 覆盖完整 | Happy Path+边界+异常 | 覆盖率统计分析 |
 
-## 决策规则
-
-| 情况 | 处理方式 |
-|------|----------|
-| 自动分级置信度<0.7 | 强制人类确认PRD层级 |
-| 门禁1或2失败 | 阻塞流程，输出缺失项清单 |
-| MVP范围变化>30% | 触发升级，召集相关方会议 |
-| 上游核心字段完全缺失（L2） | 中断流程，强制要求补充 |
-
-## 质量检查
-
-- [ ] 9节结构全部存在
-- [ ] 追溯链从OKR到验收标准贯通
-- [ ] 无模糊量词和悬空引用
-- [ ] 4道门禁全部通过
-
 ## 降级策略
 
 ### 上游文件缺失降级方案
 
 | 缺失范围 | 降级方案 | 输出影响 |
 |----------|----------|----------|
+| insight_analysis缺失 | 基于用户描述和opportunity_definition补充用户洞察，标注"洞察数据待补充" | Section 2用户需求部分简化，需求收集可能不够完整 |
+| opportunity_definition缺失 | 基于用户描述和insight_analysis推断机会和优先级，标注"优先级待确认" | 需求理解和优先级排序可能不够精准 |
+| insight_analysis + opportunity_definition均缺失 | 基于用户口头描述执行内建的需求收集、理解和优先级排序（Step 1-3），标注"需求管理数据为AI推断" | 需求管理全流程依赖AI推断，置信度降低 |
 | 部分上游缺失（如仅缺exploration_outputs） | 生成对应章节时标注"待补充"，其他章节正常生成 | 部分章节内容不完整，标注待补充 |
 | exploration_outputs缺失 | 背景与目标章节标注"待补充"，基于用户描述生成简化版 | Section 2内容简化 |
 | strategy_outputs缺失 | OKR对齐和优先级判断章节标注"待补充" | Section 2.2目标定义简化 |
 | ideation_outputs缺失 | 方案设计章节标注"待补充"，基于用户描述生成功能列表 | Section 3功能规格简化 |
 | design_outputs缺失 | 交互逻辑和状态设计标注"待补充" | Section 3.2交互逻辑简化 |
 | metrics_outputs缺失 | 数据埋点方案标注"待补充" | Section 6内容简化 |
-| 所有上游缺失 | 基于用户口头描述生成简化版PRD-L（200-500字） | 输出PRD-L级别文档 |
+| 所有上游缺失 | 基于用户口头描述生成简化版PRD-L（200-500字），内建执行需求收集、理解和优先级排序 | 输出PRD-L级别文档 |
 
 ### 数据获取说明
 
@@ -479,11 +690,14 @@ L2处理：
 
 | PRD变更类型 | 通知范围 | 通知方式 |
 |-------------|----------|----------|
-| 功能点增删 | api-contract、design-ia、development-task-breakdown、quality-auto-test | 标记变更影响范围，触发受影响Skill重新执行 |
-| 优先级调整 | development-task-breakdown、release-auto-checklist | 标记优先级变更，触发重新排序 |
+| 功能点增删 | change-impact-analysis | 标记变更影响范围，触发变更影响分析 |
+| 优先级调整 | change-impact-analysis | 标记优先级变更，触发影响评估 |
 | 目标指标变更 | metrics-system、tracking-plan | 标记指标变更，触发度量体系更新 |
 | 商业逻辑变更 | business-model-canvas、business-strategy-report | 标记商业逻辑变更，触发战略文档更新 |
 
 ## 变更记录
 
 - v3.0: 将PRD完整9节结构、输入Schema、输出Schema拆分到Reference文件夹，SKILL.md保留核心逻辑和概览表格
+- v3.1: 需求管理内建——输入新增insight_analysis和opportunity_definition引用（替代原requirements-collection/understanding/prioritization输入）；标注需求收集、理解和优先级排序已内建于Step 1-3；上游消费新增洞察分析和机会定义；降级策略新增insight_analysis/opportunity_definition缺失方案；数据流向图更新
+- v3.2: 新增prd.json结构化输出——包含features[]/pages[]/entities[]/user_flows[]/goals[]/traceability[]，供Backend/UI编程式消费；下游驱动表新增消费来源列；输出校验规则新增prd.json完整性和引用一致性检查
+- v3.3: prd.json补全——non_functional_requirements的availability/security/observability从空数组补全为完整Schema；新增tracking_plan数据埋点结构；input-schema.md补充insight_analysis/opportunity_definition字段；删除重复的质量检查和决策规则章节；prd-structure.md PRD-L/X调整规则具体化；OKR对齐格式与prd.json goals[]结构对齐

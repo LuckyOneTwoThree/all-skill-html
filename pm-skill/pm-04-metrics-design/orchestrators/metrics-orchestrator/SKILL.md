@@ -1,11 +1,17 @@
 ---
 name: metrics-orchestrator
-description: 当需要构建产品度量体系时使用。产品度量设计子模块指挥官，调度子Skill：metrics-system（指标体系自动构建）、tracking-plan（埋点方案自动生成）、metrics-dashboard（Dashboard自动配置）。关键词：度量设计、指标体系、埋点方案、Dashboard配置。
+description: 当需要构建产品度量体系时使用。产品度量设计子模块指挥官，调度子Skill：metrics-system（指标体系自动构建）、tracking-plan（埋点方案自动生成）、metrics-dashboard（Dashboard自动配置）。关键词：度量设计、指标体系、埋点方案、Dashboard配置、数据指标、KPI设计、数据埋点。
 metadata:
   module: "产品度量设计"
   sub-module: "度量设计"
   type: "orchestrator"
-  version: "5.0"
+  version: "6.1"
+  domain_tags: ["通用"]
+  trigger_examples:
+    - "帮我设计指标体系"
+    - "规划一下数据埋点"
+    - "设计产品KPI"
+    - "配置数据Dashboard"
 ---
 
 # 产品度量设计指挥官
@@ -22,46 +28,42 @@ metadata:
 
 ## 编排协议
 
-你是编排器，职责是**按阶段调度子Skill执行**，而非代理执行子Skill逻辑。严格遵循以下协议：
-
-### 调用规则
-
-1. **显式调用**：使用 `Skill` 工具调用子Skill，传递输入数据，接收输出结果
-2. **不代理执行**：不读取子Skill的SKILL.md来替代执行，不自行推断子Skill的内部逻辑
-3. **契约驱动**：只关注子Skill的输入契约、输出契约和验证条件，不关注内部实现
-4. **状态传递**：将当前阶段的输出作为下一阶段的输入，通过文件路径传递数据
-5. **验证后推进**：每个阶段输出验证通过后，才推进到下一阶段
-6. **阶段总结**：所有子Skill执行完成后，生成阶段总结文档，写入 `output/phase-reports/pm-metrics-design/metrics-orchestrator.md`
-
-### 上下文管理
-
-- 每个子Skill调用完成后，只保留**输出文件路径**和**关键结论摘要**
-- 详细输出写入对应模块的 `output/pm-metrics-design/{skill-name}/` 目录
-- 若上下文接近上限，优先保留当前阶段内容和待执行阶段的子Skill名称
-
-### 阶段总结
-
-所有子Skill执行完成后，编排器必须生成一份阶段总结文档，写入 `output/phase-reports/pm-metrics-design/metrics-orchestrator.md`，包含以下结构：
-
-1. **执行概览**：编排器名称与版本、执行时间、子Skill执行状态（成功/失败/降级）
-2. **关键发现**：每个子Skill的核心输出摘要（1-3条）、跨子Skill的交叉洞察
-3. **决策记录**：人类决策点及决策结果、AI自动决策及依据
-4. **产出清单**：所有输出文件路径及内容摘要、产出质量评估（是否通过验证）
-5. **风险与待办**：未通过验证的项、降级执行的项、建议后续跟进的事项
-6. **下游衔接**：本编排器产出可被哪些下游编排器消费、推荐的下一步编排器
+编排协议遵循 [orchestrator-protocol.md](../../templates/orchestrator-protocol.md) 统一标准。
 
 ## Pipeline
 
 ```yaml
-pipeline:
-  - stage: metrics-system
-    gate: 北极星指标人类已选择
-  - stage: tracking-plan
-    depends_on: [metrics-system]
-    gate: 埋点方案人类已审核
-  - stage: metrics-dashboard
-    depends_on: [metrics-system, tracking-plan]
-    gate: Dashboard布局人类已确认
+pipeline: metrics-orchestrator
+version: 6.1
+
+post_pipeline:
+  - action: stage-summary
+    output: output/phase-reports/pm-metrics-design/metrics-orchestrator.md
+
+stages:
+  - id: phase-1
+    name: "指标体系"
+    depends_on: []
+    skills: [metrics-system]
+    gate:
+      condition: "北极星指标人类已选择"
+      fail_action: "北极星指标必须人类决策，AI只提供候选和分析"
+
+  - id: phase-2
+    name: "埋点方案"
+    depends_on: [phase-1]
+    skills: [tracking-plan]
+    gate:
+      condition: "埋点方案人类已审核"
+      fail_action: "业务逻辑正确性和隐私合规性必须人类确认"
+
+  - id: phase-3
+    name: "Dashboard配置"
+    depends_on: [phase-1, phase-2]
+    skills: [metrics-dashboard]
+    gate:
+      condition: "Dashboard布局人类已确认"
+      fail_action: "布局合理性和告警阈值需人类审核"
 ```
 
 ## 阶段执行计划
@@ -105,6 +107,33 @@ Skill: metrics-dashboard
 模式: 🤖→👤
 ```
 
+### 阶段总结（post_pipeline）
+
+所有业务阶段执行完成后，**必须立即**生成阶段总结文档：
+
+```
+动作: 生成阶段总结
+输入:
+  所有子Skill输出: output/pm-metrics-design/
+  人类决策记录: 本轮执行中的人类决策点及结果
+输出: output/phase-reports/pm-metrics-design/metrics-orchestrator.md
+验证: 阶段总结文档已生成，6项结构（执行概览/关键发现/决策记录/产出清单/风险与待办/下游衔接）均非空
+下游衔接:
+  primary:
+    target: monitoring-orchestrator
+    reason: 度量设计完成，建议进入监控预警阶段，将指标体系和埋点方案落地为监控配置
+    input_mapping:
+      metrics_output: "output/pm-metrics-design/metrics-system/ → monitoring-pipeline输入"
+      tracking_output: "output/pm-metrics-design/tracking-plan/ → 开发阶段埋点实现"
+  alternatives:
+    - target: design-orchestrator
+      reason: 如度量设计发现PRD功能点遗漏，需回溯补充设计
+      condition: 指标体系设计中发现PRD功能点覆盖不完整时
+模式: 🤖
+```
+
+⏸ **阶段卡口**：阶段总结文档已生成且6项结构均非空 → 未通过：补充缺失结构项后重新生成
+
 ## 阶段卡口
 
 | 卡口 | 条件 | 未通过处理 |
@@ -112,6 +141,7 @@ Skill: metrics-dashboard
 | 指标体系完成 | 北极星指标人类已选择 | 北极星指标必须人类决策，AI只提供候选和分析 |
 | 埋点方案完成 | 埋点方案人类已审核 | 业务逻辑正确性和隐私合规性必须人类确认 |
 | Dashboard完成 | Dashboard布局人类已确认 | 布局合理性和告警阈值需人类审核 |
+| 阶段总结已生成 | output/phase-reports/pm-metrics-design/metrics-orchestrator.md 已生成且6项结构均非空 | 补充缺失结构项后重新生成 |
 
 ## 人类决策点
 
@@ -130,6 +160,7 @@ Skill: metrics-dashboard
 | 上游输入文件缺失 | 按子Skill降级策略执行，记录降级信息，在最终输出中标注降级影响范围 |
 | 子Skill执行超时 | 标记超时阶段，输出已完成的部分结果，提示人类检查输入数据质量 |
 | 人类决策超时未响应 | 暂停流程，保留当前阶段状态，支持人类恢复后从断点继续 |
+| 阶段总结生成失败 | 基于已完成的子Skill输出生成部分总结，缺失项标注"数据缺失"，不阻塞编排完成 |
 
 ## 变更记录
 
@@ -138,3 +169,4 @@ Skill: metrics-dashboard
 - v3.0: 优化为子Skill执行协议+阶段执行计划模式，增加子Skill定义读取路径和输入输出规范，调度规则从"加载"改为"执行"
 - v4.0: 执行步骤原则替换为编排理念，新增异常处理表
 - v5.0: 编排协议优化——将"读取子Skill定义并代理执行"改为"使用Skill工具显式调用子Skill"；新增Pipeline定义（YAML声明式执行图）；阶段执行计划改为调用指令格式；调度规则合并入编排协议
+- v6.1: 阶段总结强化——Pipeline新增post_pipeline定义；调用规则第6条改为强制执行；阶段执行计划新增阶段总结执行指令；阶段卡口新增阶段总结校验；异常处理新增阶段总结生成失败策略
